@@ -1,5 +1,6 @@
 
 import java.awt.Graphics2D;
+import javafx.scene.canvas.GraphicsContext;
 
 public class TileMap{
     //массив этих квадратиков
@@ -12,7 +13,7 @@ public class TileMap{
     }
     
     //отрисовка всех квадратиков
-    public void Draw(Graphics2D g2d) {
+    public void Draw(GraphicsContext g2d) {
         for (int i = 0; i < tileMap.length; i++) {
             for (int j = 0; j < tileMap[i].length; j++) {
                 tileMap[i][j].draw(g2d);

@@ -1,27 +1,30 @@
+
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.util.ArrayList;
+import java.util.Scanner;
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
-import sun.plugin.dom.css.Rect;
-/*
-import State.ExperimentSettings;
-import State.ExperimentState;
-import State.ExperimentLoader;
-import State.Particle;
-import java.io.File;
-import java.io.IOException;
-*/
+
+
 
  
 public class JavaFXApplication2 extends Application{
@@ -33,109 +36,172 @@ public class JavaFXApplication2 extends Application{
         loader = new ExperimentLoader(sourceFile);
     }*/
      
-    
+    ArrayList<TileMap> TileM = new ArrayList<>();
+    double W;//коэфициент разборчивости
+    Load loader;
+    private Canvas canvas;
     public static void main(String[] args) {
         launch(args);
     }
  
     @Override
-    public void start(Stage primaryStage) {
-        Group root = new Group();    
+    public void start(Stage primaryStage) throws Exception {
+        
+        primaryStage.setTitle("Расчет с помощью виброизлучателей");
+        
+        BorderPane root = new BorderPane();  
+        VBox vBox = new VBox();
+        vBox.setAlignment(Pos.TOP_RIGHT);
+        Label label1 = new Label("Тип конструкции");
+        Label label2 = new Label("Ширина");
+        Label label3 = new Label("Высота");
+        Label label4 = new Label("Разборчивость речи");
         TextField sizeX = new TextField();
         TextField sizeY = new TextField();
-        Canvas canvas = new Canvas(300, 400);
+        TextField speech = new TextField();
+        Label label5 = new Label("Легкие датчики");
+        Button vib1 = new Button("VNG-012GL");
+        Button vib2 = new Button("Соната-АВ");
+        Label label6 = new Label("Тяжелые датчики");
+        Button vib3 = new Button("VNG-012GL");
+        Button vib4 = new Button("Соната-АВ");
+        
         
         GraphicsContext gc = canvas.getGraphicsContext2D();
         Button btn = new Button();
         btn.setText("Добавить");
         
         ChoiceBox<String> choicebox = new ChoiceBox<>();
-        choicebox.getItems().addAll("Window", "Wall", "Pipe");
-        choicebox.setValue("Window");
-        canvas = createCanvasGrid(Integer.parseInt(sizeX.getText()), Integer.parseInt(sizeY.getText()), choicebox.getValue());
-        btn.setOnAction(new EventHandler<ActionEvent>() {
+        choicebox.getItems().addAll("Окно", "Стена", "Труба");
+        choicebox.setValue("Окно");
+        //canvas = createCanvasGrid(600, 500, choicebox.getValue());
+        vib2.setOnAction(new EventHandler<ActionEvent>() {
             
             @Override
             public void handle(ActionEvent event) {
+                try {
+                    int a = Integer.parseInt(sizeX.getText());
+                    System.out.println(a);
+                    int b = Integer.parseInt(sizeY.getText());
+                } catch (NumberFormatException e) {
+                    System.out.println(e);
+                    }
+                
+                
+                //
+                //String type = choicebox.getValue();
+                //drawVib(gc, a, b, type);
+                //repaint();
+                gc.clearRect(0, 0, 400, 500);
+                
+            }
+        });
+        State state = loader.getState();
+        
+        choicebox.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+               try{ 
+                String type = choicebox.getValue();
                 int a = Integer.parseInt(sizeX.getText());
                 int b = Integer.parseInt(sizeY.getText());
-                String type = choicebox.getValue();
-                drawVib(gc, a, b, type);
-                //repaint();
+                W = Integer.parseInt(speech.getText());
+                switch(type){
+                   case "Окно": {redrawCanvas(state);}
+                   case "Стена" : {redrawCanvas(state);}
+                   case "Труба" : {createCanvasGrid(a,b,type); System.out.println(type);}
+        }
+               }
+               catch(NumberFormatException e) {
+                    System.out.println(e);
+                    }
             }
         });
         ToolBar toolBar1 = new ToolBar();
+        toolBar1.setOrientation(Orientation.VERTICAL);
         toolBar1.getItems().addAll(
-                new Separator(),
-                btn,
-                sizeX,
-                sizeY,
+                label1,
                 choicebox,
-                new Separator()
+                new Separator(),
+                label2,sizeX,
+                label3,sizeY,
+                new Separator(),
+                label4, speech,
+                new Separator(),
+                label5, vib1, vib2,
+                label6, vib3, vib4
             );
+        
+        vBox.getChildren().add(toolBar1);
+        root.setRight(vBox);
         //Scene scene = new Scene(pane, 600, 400);
-        root.getChildren().addAll(canvas, toolBar1);
-        primaryStage.setScene(new Scene(root));
+        root.setLeft(canvas);
+        primaryStage.setScene(new Scene(root, 750, 500));
         primaryStage.show();
         
     }
 
         //перерисовка канвы еще не работает
-     /*   private void redraw(final ExperimentState state) {
-        ExperimentSettings settings = loader.getExperimentSettings();
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-
-        double barrierWidth = settings.getBarrierWidth();
-        double barrierXMin = settings.getBarrierPosX() - barrierWidth / 2;
-        double holeHeight = settings.getHoleHeight();
-        double upperBarrierHeight = settings.getBoxHeight() - settings.getHolePosY() - holeHeight / 2;
-        double lowerBarrierHeight = settings.getHolePosY() - holeHeight / 2;
-        double particleR = settings.getParticleRadius();
-
-        gc.clearRect(0, 0, settings.getBoxWidth(), settings.getBoxHeight());
-        gc.setStroke(Color.WHITE);
-        gc.setLineWidth(0.02);
-        gc.strokeRect(
-                barrierXMin + 0.01,
-                -0.01,
-                barrierWidth,
-                lowerBarrierHeight);
-        gc.strokeRect(
-                barrierXMin + 0.01,
-                settings.getBoxHeight() - upperBarrierHeight + 0.01,
-                barrierWidth,
-                upperBarrierHeight);
-
-        for (Particle p : state.getParticles()) {
-            if ((p.getId() & 1) == 0) {
-                gc.setFill(Color.RED);
-            } else {
-                gc.setFill(Color.SKYBLUE);
-            }
-
-            gc.fillOval(p.getPosX(), p.getPosY(), particleR, particleR);
-        }
-    }
-    */
-    private void drawVib(GraphicsContext gc, int a, int b, String type) {
-        TileMap TileM = new TileMap(a, b);
-        gc.fillOval(10, 60, 4, 4);
+    private void redrawCanvas(final State state) {
+        
+            Settings settings = loader.getSettings();
+            GraphicsContext gc = canvas.getGraphicsContext2D();
+            
+            String type = settings.getType();
+            int width = settings.getWidth();
+            int hight = settings.getHight();
+            
+            gc.clearRect(0, 0, settings.getWidth(), settings.getHight());
+            gc.setStroke(Color.WHITE);
+            
+            gc.setLineWidth(1.0);
+        int a = 20;
         switch(type){
-            case "Window": gc.setFill(Color.BLUE);
-            case "Wall" : gc.setFill(Color.WHITE);
-            case "Pipe" : gc.setFill(Color.GRAY);
+            case "Окно" : a = 100;
+            case "Труба" : a = 20;
+            case "Стена" : a = 20;}
+        for (int x = 0; x < width; x+=a) {
+            double x1 ;
+            x1 = x + 0.5 ;
+            gc.moveTo(x1, 0);
+            gc.lineTo(x1, hight);
+            gc.stroke();
+        }
+
+        for (int y = 0; y < hight; y+=a) {
+            double y1 ;
+            y1 = y + 0.5 ;
+            gc.moveTo(0, y1);
+            gc.lineTo(width, y1);
+            gc.stroke();
         }
     }
     
+    private void drawVib(GraphicsContext gc, int a, int b, String type) {
+        ArrayList<TileMap> TileM = new ArrayList<>();
+        TileM.add(new TileMap(a,b));
+        //TileM.Draw(gc);
+        gc.fillOval(10, 60, 4, 4);
+        switch(type){
+            case "Окно": gc.setFill(Color.BLUE);
+            case "Стена" : gc.setFill(Color.WHITE);
+            case "Труба" : gc.setFill(Color.GRAY);
+        }
+        
+    }
+    
+    
+    
     private Canvas createCanvasGrid(int width, int height, String type) {
+        
         Canvas canvas = new Canvas(width, height);
         GraphicsContext gc = canvas.getGraphicsContext2D() ;
         gc.setLineWidth(1.0);
         int a = 0;
         switch(type){
-            case "Window" : a = 100;
-            case "Pipe" : a = 20;
-            case "Wall" : a = 20;}
+            case "Окно" : a = 100;
+            case "Труба" : a = 20;
+            case "Стена" : a = 20;}
         for (int x = 0; x < width; x+=a) {
             double x1 ;
             x1 = x + 0.5 ;
@@ -155,4 +221,121 @@ public class JavaFXApplication2 extends Application{
     }
     
 
+} 
+
+final class Settings{
+    private ArrayList<TileMap> tileM = new ArrayList<>();
+    private final double W;
+    private final int Width;
+    private final int Hight;
+    private final String Type;
+    
+    private Settings(final Context context) {
+        tileM = context.tileM;
+        W = context.W;
+        Width = context.Width;
+        Hight = context.Hight;
+        Type = context.Type;
+    }
+    
+    public double getSpeech(){
+        return W;
+    }
+    
+    public int getWidth(){
+        return Width;
+    }
+    
+    public int getHight(){
+        return Hight;
+    }
+    
+    public String getType(){
+        return Type;
+    }
+    
+    public ArrayList<TileMap> getTileMap(){
+        return tileM;
+    }
+    
+public Context newContext() {
+        return new Context();
+    }
+
+public class Context{
+    private ArrayList<TileMap> tileM = new ArrayList<>();
+    private double W;
+    private int Width;
+    private int Hight;
+    private String Type;
+           
+            
+    Context getW(final double w) {
+            W = w;
+           return this;
+        }
+    
+    Context getSize(final int width, final int hight) {
+            Width = width;
+            Hight = hight;
+           return this;
+        }
+    
+    Context getType(final String type) {
+            Type = type;
+           return this;
+        }
+    
+    Context getTile(final ArrayList<TileMap> tilem){
+        tileM = tilem;
+        return this;
+    }
+    
+    public Settings build() {
+            return new Settings(this);
+        }
+}
+}
+
+final class State{
+    private final Settings settings;
+    
+    private State(final Context context) {
+        settings = context.settings;
+    }
+    
+    public static Context newContext() {
+        return new Context();
+    }
+    
+    public static class Context{
+        private Settings settings;
+        
+        public Context settings(final Settings settings) {
+            this.settings = settings;
+            return this;
+        }
+        
+        public State build() {
+            return new State(this);
+        }
+    }
+    
+    
+}
+
+
+class Load{
+    private Settings settings;
+    
+    public Settings getSettings() {
+        return settings;
+    }
+    
+    public State getState() throws Exception {
+        
+        return State.newContext()
+                .settings(settings)
+                .build();
+    }
 }
