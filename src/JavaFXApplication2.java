@@ -38,7 +38,6 @@ public class JavaFXApplication2 extends Application{
      
     ArrayList<TileMap> TileM = new ArrayList<>();
     double W;//коэфициент разборчивости
-    Load loader;
     private Canvas canvas;
     public static void main(String[] args) {
         launch(args);
@@ -96,20 +95,22 @@ public class JavaFXApplication2 extends Application{
                 
             }
         });
-        State state = loader.getState();
+
         
         choicebox.setOnAction(new EventHandler<ActionEvent>(){
             @Override
             public void handle(ActionEvent event) {
                try{ 
+                
                 String type = choicebox.getValue();
                 int a = Integer.parseInt(sizeX.getText());
                 int b = Integer.parseInt(sizeY.getText());
                 W = Integer.parseInt(speech.getText());
+                Settings set = new Settings(TileM,W, a, b, type);
                 switch(type){
-                   case "Окно": {redrawCanvas(state);}
-                   case "Стена" : {redrawCanvas(state);}
-                   case "Труба" : {createCanvasGrid(a,b,type); System.out.println(type);}
+                   case "Окно": {redrawCanvas(set);}
+                   case "Стена" : {redrawCanvas(set);}
+                   case "Труба" : {redrawCanvas(set); }
         }
                }
                catch(NumberFormatException e) {
@@ -142,9 +143,8 @@ public class JavaFXApplication2 extends Application{
     }
 
         //перерисовка канвы еще не работает
-    private void redrawCanvas(final State state) {
-        
-            Settings settings = loader.getSettings();
+    private void redrawCanvas(final Settings settings) {
+            
             GraphicsContext gc = canvas.getGraphicsContext2D();
             
             String type = settings.getType();
@@ -225,17 +225,17 @@ public class JavaFXApplication2 extends Application{
 
 final class Settings{
     private ArrayList<TileMap> tileM = new ArrayList<>();
-    private final double W;
-    private final int Width;
-    private final int Hight;
-    private final String Type;
+    private double W;
+    private int Width;
+    private int Hight;
+    private String Type;
     
-    private Settings(final Context context) {
-        tileM = context.tileM;
-        W = context.W;
-        Width = context.Width;
-        Hight = context.Hight;
-        Type = context.Type;
+    Settings(ArrayList<TileMap> tilem, double w, int width, int hight, String type) {
+        tileM = tilem;
+        W = w;
+        Width = width;
+        Hight = hight;
+        Type = type;
     }
     
     public double getSpeech(){
@@ -258,84 +258,12 @@ final class Settings{
         return tileM;
     }
     
-public Context newContext() {
-        return new Context();
-    }
-
-public class Context{
-    private ArrayList<TileMap> tileM = new ArrayList<>();
-    private double W;
-    private int Width;
-    private int Hight;
-    private String Type;
-           
-            
-    Context getW(final double w) {
-            W = w;
-           return this;
-        }
-    
-    Context getSize(final int width, final int hight) {
-            Width = width;
-            Hight = hight;
-           return this;
-        }
-    
-    Context getType(final String type) {
-            Type = type;
-           return this;
-        }
-    
-    Context getTile(final ArrayList<TileMap> tilem){
+    public void setSettings(ArrayList<TileMap> tilem, double w, int width, int hight, String type){
         tileM = tilem;
-        return this;
+        W = w;
+        Width = width;
+        Hight = hight;
+        Type = type;
     }
-    
-    public Settings build() {
-            return new Settings(this);
-        }
-}
-}
 
-final class State{
-    private final Settings settings;
-    
-    private State(final Context context) {
-        settings = context.settings;
-    }
-    
-    public static Context newContext() {
-        return new Context();
-    }
-    
-    public static class Context{
-        private Settings settings;
-        
-        public Context settings(final Settings settings) {
-            this.settings = settings;
-            return this;
-        }
-        
-        public State build() {
-            return new State(this);
-        }
-    }
-    
-    
-}
-
-
-class Load{
-    private Settings settings;
-    
-    public Settings getSettings() {
-        return settings;
-    }
-    
-    public State getState() throws Exception {
-        
-        return State.newContext()
-                .settings(settings)
-                .build();
-    }
 }
